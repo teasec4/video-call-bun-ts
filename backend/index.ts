@@ -1,25 +1,33 @@
 import type { ServerWebSocket } from "bun";
 
-type WSData = {
-  id: string;
-}
-
-type Message = {
-  type: "offer" | "answer" | "ice";
-  to: string;
-  payload: any;
-}
 
 const port = 3030
 
-const clients = new Map<string, ServerWebSocket<WSData>>();
+const clients = new Map<string, Client>();
+
+type Client = {
+  id: string;
+  ws: ServerWebSocket<WSData>;
+}
+
+type WSData = {
+  id: string;
+};
 
 Bun.serve<WSData>({
   port: port,
   fetch(req, server) {
     const url = new URL(req.url);
+    
     if (url.pathname === "/chat") {
-      if (server.upgrade(req, { data: {} as WSData })) {
+      const peerId = url.searchParams.get("peerId");
+      if (!peerId) {
+        return new Response("Missing peer id", { status: 400 });
+      }
+      
+      if (server.upgrade(req, {
+        data: { id: peerId }
+      })) {
         return;
       }
       return new Response("Upgrade failed", { status: 400 });
@@ -27,21 +35,24 @@ Bun.serve<WSData>({
     return new Response("Hello World");
   },
   websocket: {
-    open(ws: ServerWebSocket<WSData>) {
-      const id = crypto.randomUUID();
-
-      ws.data = { id };
-      clients.set(id, ws);
+    open(ws) {
+      const id = ws.data.id;
+      
+      const client : Client = {
+        id: id,
+        ws: ws
+      }
+      clients.set(id, client);
 
       ws.send(JSON.stringify({ type: "id", payload: id }));
     },
 
-    message(ws: ServerWebSocket<WSData>, msg: string | Buffer) {
-      const data: Message = JSON.parse(msg.toString());
-      console.log("Message from", ws.data.id, data)
+    message(ws: ServerWebSocket<WSData>, msg: string) {
+      const data = JSON.parse(msg.toString());
+      console.log("Message from", data.from, data)
       // broadcast
       for (const [, client] of clients) {
-        client.send(
+        client.ws.send(
           JSON.stringify({
             from: ws.data.id,
             ...data,

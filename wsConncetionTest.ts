@@ -1,7 +1,9 @@
 
 
 const id = crypto.randomUUID() || "anon"
-const ws = new WebSocket("ws://localhost:3030/chat")
+const ws = new WebSocket(
+  `ws://localhost:3030/chat?peerId=${encodeURIComponent(id)}`
+);
 
 ws.onopen = () => {
   console.log("connected to server");
@@ -17,7 +19,7 @@ ws.onmessage = (event) => {
 process.stdin.on("data", (data) => {
   ws.send(JSON.stringify({
     type: "chat",
-    from: id
+    from: id,
     payload: data.toString().trim()
   }));
 });
