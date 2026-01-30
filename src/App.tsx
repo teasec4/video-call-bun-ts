@@ -13,12 +13,19 @@ export function App() {
   const [chatOpen, setChatOpen] = useState(true);
   const [msg, setMsg] = useState<Message[]>([])
   const [err, setErr] = useState("")
-  const [id, setId] = useState(crypto.randomUUID())
+  const [id, setId] = useState(() => {
+    const saved = localStorage.getItem("peerId")
+    return saved || crypto.randomUUID()
+  })
+  
+  useEffect(() => {
+    localStorage.setItem("peerId", id)
+  }, [id])
+  
   const wsRef = useRef<WebSocket | null>(null)
   
   useEffect(() => {
     setErr("")
-    setMsg([])
     wsRef.current = new WebSocket(
       `ws://localhost:3030/chat?peerId=${encodeURIComponent(id)}`
     );
@@ -26,6 +33,10 @@ export function App() {
     
     wsRef.current.onopen = () => {
       console.log("connected to server")
+      fetch(`http://localhost:3030/api/messages`)
+        .then(r => r.json())
+        .then(history => setMsg(history))
+        .catch(err => console.error("Fetch error:", err))
     }
     
     wsRef.current.onmessage = (event) => {

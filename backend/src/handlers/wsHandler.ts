@@ -1,8 +1,9 @@
 import type { ServerWebSocket } from "bun";
 import type { WSData, Client } from "../types/ws";
 import { ClientManager } from "../services/ClientManager";
+import type { MessageStore } from "../services/MessageStore";
 
-export function createWSHandlers(clientManager: ClientManager) {
+export function createWSHandlers(clientManager: ClientManager, messageStore: MessageStore) {
   return {
     open(ws: ServerWebSocket<WSData>) {
       const id = ws.data.id;
@@ -19,13 +20,18 @@ export function createWSHandlers(clientManager: ClientManager) {
     message(ws: ServerWebSocket<WSData>, msg: string) {
       const data = JSON.parse(msg.toString());
       console.log("Message from", data.from, data);
-      
-      // broadcast
-      const message = JSON.stringify({
+
+      const message = {
         from: ws.data.id,
         ...data,
-      });
-      clientManager.broadcastMessage(message);
+      };
+
+      // Сохраняем в MessageStore
+      messageStore.addMessage(message);
+
+      // Broadcast всем
+      const broadcastMsg = JSON.stringify(message);
+      clientManager.broadcastMessage(broadcastMsg);
     },
 
     close(ws: ServerWebSocket<WSData>) {
