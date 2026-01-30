@@ -1,17 +1,25 @@
 import { Send } from "lucide-react";
 import { useState } from "react";
 
-export function ChatArea() {
-  const [messages, setMessages] = useState<Array<{ id: number; text: string; sender: string }>>([
-    { id: 1, text: "Hey, can you hear me?", sender: "John" },
-    { id: 2, text: "Yeah, loud and clear!", sender: "You" },
-    { id: 3, text: "Great! Let's start", sender: "Sarah" },
-  ]);
-  const [input, setInput] = useState("");
+type Message = {
+  type: string;
+  from: string;
+  payload: string;
+};
+
+type ChatAreaProps = {
+  messages: Message[];
+  onSendMessage: (text: string) => void;
+  myId: string;
+};
+
+export function ChatArea({messages, onSendMessage, myId} : ChatAreaProps) {
+  
+  const [input, setInput] = useState<string>("");
 
   const handleSend = () => {
     if (input.trim()) {
-      setMessages([...messages, { id: messages.length + 1, text: input, sender: "You" }]);
+      onSendMessage(input)
       setInput("");
     }
   };
@@ -22,15 +30,16 @@ export function ChatArea() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.sender === "You" ? "justify-end" : "justify-start"}`}>
+        {messages.map((msg, index) => (
+          // do we need a Key?
+          <div key={index} className={`flex ${msg.from === myId ? "justify-end" : "justify-start"}`}>
             <div
               className={`px-4 py-2 rounded-lg max-w-xs ${
-                msg.sender === "You" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-100"
+                msg.from === myId ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-100"
               }`}
             >
-              <p className="text-xs font-semibold opacity-70">{msg.sender}</p>
-              <p className="text-sm">{msg.text}</p>
+              <p className="text-xs font-semibold opacity-70">{msg.from}</p>
+              <p className="text-sm">{msg.payload}</p>
             </div>
           </div>
         ))}
