@@ -1,7 +1,8 @@
-type StoredMessage = {
+export type StoredMessage = {
   type: string;
   from: string;
-  payload: string;
+  payload: any;
+  roomId: string;
 };
 
 export class MessageStore {
@@ -15,7 +16,15 @@ export class MessageStore {
     return this.messages;
   }
 
+  getMessagesByRoom(roomId: string): StoredMessage[] {
+    return this.messages.filter(msg => msg.roomId === roomId);
+  }
+
   clearMessages() {
     this.messages = [];
+  }
+
+  clearMessagesByRoom(roomId: string) {
+    this.messages = this.messages.filter(msg => msg.roomId !== roomId);
   }
 }
