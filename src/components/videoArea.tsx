@@ -32,6 +32,10 @@ export function VideoArea({
         alert("Allow camera and microphone access");
       });
     }
+    // Загружаем список камер при монтировании
+    if (webrtc.mediaState.cameras.length === 0) {
+      webrtc.getCameras();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Только при монтировании
 

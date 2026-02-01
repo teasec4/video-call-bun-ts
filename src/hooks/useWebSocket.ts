@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { SignalingMessage, SignalingMessageType } from "../types/webrtc";
+import { WS_URL } from "../config/api";
 
 interface UseWebSocketOptions {
   roomId: string;
@@ -30,7 +31,7 @@ export function useWebSocket({
 
     try {
       const ws = new WebSocket(
-        `ws://localhost:3030/chat?peerId=${encodeURIComponent(peerId)}&roomId=${encodeURIComponent(roomId)}`
+        `${WS_URL}/chat?peerId=${encodeURIComponent(peerId)}&roomId=${encodeURIComponent(roomId)}`
       );
 
       ws.onopen = () => {

@@ -14,6 +14,7 @@ const httpHandler = createHttpHandler(messageStore, roomManager)
 
 Bun.serve<WSData>({
   port: PORT,
+  hostname: "0.0.0.0", // Слушаем на всех интерфейсах, не только localhost
   async fetch(req, server) {
     const url = new URL(req.url);
 

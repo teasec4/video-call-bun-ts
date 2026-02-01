@@ -4,6 +4,7 @@ import { VideoArea } from "../components/videoArea";
 import { useWebSocket } from "../hooks/useWebSocket";
 import { useWebRTC } from "../hooks/useWebRTC";
 import { useEffect, useState, useCallback, useRef } from "react";
+import { v4 as uuidv4 } from "uuid";
 import type { SignalingMessage } from "../types/webrtc";
 
 type Message = {
@@ -19,7 +20,7 @@ export function RoomPage() {
   const [msg, setMsg] = useState<Message[]>([]);
   const [id] = useState(() => {
     const saved = localStorage.getItem("peerId");
-    return saved || crypto.randomUUID();
+    return saved || uuidv4();
   });
 
   useEffect(() => {

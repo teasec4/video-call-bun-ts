@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
+import { API_URL } from "../config/api";
 
 interface RoomControlProps {
   roomId: string | null;
@@ -17,7 +18,7 @@ export function RoomControl({ roomId, onRoomCreated, onJoinRoom }: RoomControlPr
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("http://localhost:3030/api/room", {
+      const response = await fetch(`${API_URL}/api/room`, {
         method: "POST",
       });
       const data = await response.json();
@@ -40,7 +41,7 @@ export function RoomControl({ roomId, onRoomCreated, onJoinRoom }: RoomControlPr
     setError("");
     try {
       const peerId = localStorage.getItem("peerId") || crypto.randomUUID();
-      const response = await fetch("http://localhost:3030/api/room/join", {
+      const response = await fetch(`${API_URL}/api/room/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roomId: inputRoomId, peerId }),
