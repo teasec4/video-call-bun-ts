@@ -1,5 +1,5 @@
 import type { WSData } from "./types";
-import { PORT } from "./config/constants";
+import { PORT, CORS_ORIGIN } from "./config/constants";
 import { ClientManager } from "./services/ClientManager";
 import { createWSHandlers } from "./handlers/wsHandler";
 import { createHttpHandler } from "./handlers/httpHandler";
@@ -19,7 +19,7 @@ Bun.serve<WSData>({
 
     // CORS headers для всех ответов
     const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": CORS_ORIGIN,
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     };

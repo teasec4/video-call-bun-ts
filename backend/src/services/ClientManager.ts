@@ -38,7 +38,13 @@ export class ClientManager {
 
   broadcastMessage(message: string) {
     for (const [, client] of this.clients) {
-      client.ws.send(message);
+      try {
+        if (client.ws.readyState === 1) { // WebSocket.OPEN
+          client.ws.send(message);
+        }
+      } catch (err) {
+        console.error(`❌ Failed to send message to client ${client.id}:`, err);
+      }
     }
   }
 
@@ -50,7 +56,13 @@ export class ClientManager {
     for (const clientId of roomSet) {
       const client = this.clients.get(clientId);
       if (client) {
-        client.ws.send(message);
+        try {
+          if (client.ws.readyState === 1) { // WebSocket.OPEN
+            client.ws.send(message);
+          }
+        } catch (err) {
+          console.error(`❌ Failed to send message to client ${clientId}:`, err);
+        }
       }
     }
   }
