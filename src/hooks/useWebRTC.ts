@@ -366,23 +366,37 @@ export function useWebRTC({
   const hangup = useCallback(() => {
     console.log("📞 Ending call...");
 
+    // Всегда отправляем hang-up сигнал
     onSendSignalingRef.current?.({ type: "hang-up" });
 
-    if (pcRef.current) {
-      pcRef.current.close();
-      pcRef.current = null;
-    }
-
+    // Останавливаем все треки ПЕРЕД закрытием соединения
     if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((track) => track.stop());
+      localStreamRef.current.getTracks().forEach((track) => {
+        console.log(`🎙️ Stopping ${track.kind} track`);
+        track.stop();
+      });
       localStreamRef.current = null;
     }
 
     if (remoteStreamRef.current) {
-      remoteStreamRef.current.getTracks().forEach((track) => track.stop());
+      remoteStreamRef.current.getTracks().forEach((track) => {
+        console.log(`🎬 Stopping remote ${track.kind} track`);
+        track.stop();
+      });
       remoteStreamRef.current = null;
     }
 
+    // Закрываем соединение ПОСЛЕ остановки треков
+    if (pcRef.current) {
+      try {
+        pcRef.current.close();
+      } catch (err) {
+        console.error("❌ Error closing peer connection:", err);
+      }
+      pcRef.current = null;
+    }
+
+    // Очищаем состояние
     setWebRTCState({
       isCalling: false,
       callActive: false,
@@ -398,6 +412,7 @@ export function useWebRTC({
     }));
 
     iceCandidateQueueRef.current = [];
+    console.log("✅ Call ended, all resources cleaned up");
   }, []); // Убрали зависимость - используем ref
 
   // Переключение видео/аудио

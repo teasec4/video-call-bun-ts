@@ -1,5 +1,4 @@
 // Интерфейсы для будущей интеграции с БД
-// Эти интерфейсы позволят легко заменить in-memory хранилище на БД
 
 export interface IRoomRepository {
   createRoom(): Promise<string>;
@@ -30,4 +29,3 @@ export interface StoredMessage {
   roomId: string;
   timestamp?: number;
 }
-

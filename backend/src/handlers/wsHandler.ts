@@ -100,10 +100,20 @@ export function createWSHandlers(clientManager: ClientManager, messageStore: Mes
           if (client.id !== fromId) {
             try {
               if (client.ws.readyState === 1) { // WebSocket.OPEN
+                // Отправляем hang-up сигнал
                 client.ws.send(JSON.stringify({
                   type: "hang-up",
                   from: fromId,
                 }));
+                // Затем закрываем комнату для обоих пиров
+                setTimeout(() => {
+                  if (client.ws.readyState === 1) {
+                    client.ws.send(JSON.stringify({
+                      type: "room-closed",
+                      reason: "call-ended"
+                    }));
+                  }
+                }, 100);
               }
             } catch (err) {
               console.error(`  ❌ Failed to send hang-up to ${client.id}:`, err);

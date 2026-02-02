@@ -31,6 +31,9 @@ export function RoomPage() {
   const webrtcRef = useRef<ReturnType<typeof useWebRTC> | null>(null);
 
   // Мемоизируем callbacks для WebSocket
+  // Placeholder для disconnect функции
+  const disconnectWSRef = useRef<(() => void) | null>(null);
+
   const handleWebSocketMessage = useCallback((message: SignalingMessage) => {
     // Обработка чата
     if (message.type === "chat") {
@@ -48,31 +51,55 @@ export function RoomPage() {
     } else if (message.type === "ice-candidate" && message.payload && webrtcRef.current) {
       webrtcRef.current.handleIceCandidate(message.payload);
     } else if (message.type === "hang-up" && webrtcRef.current) {
+      console.log("📞 Peer initiated hang-up, closing connection...");
       webrtcRef.current.hangup();
     }
   }, []);
 
   const handlePeerConnected = useCallback((peerId: string) => {
     console.log("🤝 Peer connected:", peerId);
-    // Автоматически начинаем звонок когда подключается пир
-    if (webrtcRef.current && !webrtcRef.current.webrtcState.isCalling && !webrtcRef.current.webrtcState.callActive) {
-      webrtcRef.current.startCall(peerId);
+    // Закрываем старое соединение если оно есть
+    if (webrtcRef.current && (webrtcRef.current.webrtcState.isCalling || webrtcRef.current.webrtcState.callActive)) {
+      console.log("🔄 Previous call active, hanging up before new connection...");
+      webrtcRef.current.hangup();
     }
+    // Автоматически начинаем звонок когда подключается пир
+    setTimeout(() => {
+      if (webrtcRef.current && !webrtcRef.current.webrtcState.isCalling && !webrtcRef.current.webrtcState.callActive) {
+        webrtcRef.current.startCall(peerId);
+      }
+    }, 100); // Небольшая задержка для очистки ресурсов
   }, []);
 
   const handleRoomClosed = useCallback((reason: string) => {
-    console.log("Room closed:", reason);
-    navigate("/");
+    console.log("🚪 Room closed:", reason);
+    // Заканчиваем звонок перед выходом
+    if (webrtcRef.current) {
+      webrtcRef.current.hangup();
+    }
+    // Отключаемся от WebSocket
+    if (disconnectWSRef.current) {
+      disconnectWSRef.current();
+    }
+    // Выходим на главную страницу
+    setTimeout(() => {
+      navigate("/");
+    }, 300);
   }, [navigate]);
 
   // WebSocket хук
-  const { remotePeerId, send: sendWS } = useWebSocket({
+  const { remotePeerId, send: sendWS, disconnect: disconnectWS } = useWebSocket({
     roomId: roomId!,
     peerId: id,
     onMessage: handleWebSocketMessage,
     onPeerConnected: handlePeerConnected,
     onRoomClosed: handleRoomClosed,
   });
+
+  // Сохраняем disconnect функцию в ref
+  useEffect(() => {
+    disconnectWSRef.current = disconnectWS;
+  }, [disconnectWS]);
 
   // WebRTC хук - создаем после получения sendWS
   const handleSendSignaling = useCallback((message: { type: string; to?: string; payload?: any }) => {
@@ -98,6 +125,8 @@ export function RoomPage() {
       payload: text,
     });
   }, [sendWS]);
+
+
 
   if (!roomId) {
     return <div>Room ID is required</div>;

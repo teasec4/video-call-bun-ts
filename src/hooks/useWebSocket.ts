@@ -8,6 +8,7 @@ interface UseWebSocketOptions {
   onMessage?: (message: SignalingMessage) => void;
   onPeerConnected?: (peerId: string) => void;
   onRoomClosed?: (reason: string) => void;
+  // perheps switch to Bool onRoomClosed? :(roomClose: bool) => void;
 }
 
 export function useWebSocket({

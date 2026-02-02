@@ -46,6 +46,14 @@ export function VideoArea({
     }
   }, [webrtc.mediaState.localStream]);
 
+  // Переподключение видео при разворачивании минимизированного окна
+  useEffect(() => {
+    if (showLocalVideo && localVideoRef.current && webrtc.mediaState.localStream) {
+      localVideoRef.current.srcObject = webrtc.mediaState.localStream;
+      console.log("🎥 Restored local video stream");
+    }
+  }, [showLocalVideo, webrtc.mediaState.localStream]);
+
   // Обновление удаленного видео элемента
   useEffect(() => {
     if (remoteVideoRef.current && webrtc.mediaState.remoteStream) {
