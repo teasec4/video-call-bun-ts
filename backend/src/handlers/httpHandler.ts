@@ -50,6 +50,8 @@ export function createHttpHandler(messageStore: MessageStore, roomManager: RoomM
     // POST /api/room - создать новую комнату
     if (url.pathname === "/api/room" && req.method === "POST") {
       const roomId = roomManager.createRoom();
+      // Очищаем старую историю для новой комнаты (на случай перезапуска)
+      messageStore.clearMessagesByRoom(roomId);
       return new Response(JSON.stringify({ roomId }), {
         status: 201,
         headers: { "Content-Type": "application/json" },

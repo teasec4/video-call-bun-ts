@@ -1,11 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { ChatArea } from "../components/chatArea";
 import { VideoArea } from "../components/videoArea";
+import { RoomInfo } from "../components/roomInfo";
 import { useWebSocket } from "../hooks/useWebSocket";
 import { useWebRTC } from "../hooks/useWebRTC";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { SignalingMessage } from "../types/webrtc";
+import { COLORS } from "../config/colors";
 
 type Message = {
   type: string;
@@ -17,6 +19,7 @@ export function RoomPage() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const [chatOpen, setChatOpen] = useState(true);
+  const [infoOpen, setInfoOpen] = useState(true);
   const [msg, setMsg] = useState<Message[]>([]);
   const [id] = useState(() => {
     const saved = localStorage.getItem("peerId");
@@ -37,7 +40,11 @@ export function RoomPage() {
   const handleWebSocketMessage = useCallback((message: SignalingMessage) => {
     // Обработка чата
     if (message.type === "chat") {
-      setMsg((prevMsg) => [...prevMsg, message as Message]);
+      console.log(`📨 Chat message from: ${message.from}, myId: ${id}, isMine: ${message.from === id}`);
+      // Не добавляем если это наше сообщение (будет дубль - уже добавили в handleSendMessage)
+      if (message.from !== id) {
+        setMsg((prevMsg) => [...prevMsg, message as Message]);
+      }
     }
     // Обработка истории сообщений
     else if (message.type === "message-history" && message.messages) {
@@ -54,7 +61,7 @@ export function RoomPage() {
       console.log("📞 Peer initiated hang-up, closing connection...");
       webrtcRef.current.hangup();
     }
-  }, []);
+  }, [id]);
 
   const handlePeerConnected = useCallback((peerId: string) => {
     console.log("🤝 Peer connected:", peerId);
@@ -120,11 +127,19 @@ export function RoomPage() {
   }, [webrtc]);
 
   const handleSendMessage = useCallback((text: string) => {
+    // Добавляем своё сообщение сразу в локальный стейт
+    setMsg((prevMsg) => [...prevMsg, {
+      type: "chat",
+      from: id,
+      payload: text,
+    }]);
+    
+    // Отправляем на сервер
     sendWS({
       type: "chat",
       payload: text,
     });
-  }, [sendWS]);
+  }, [sendWS, id]);
 
 
 
@@ -133,7 +148,23 @@ export function RoomPage() {
   }
 
   return (
-    <div className="w-screen h-screen bg-gray-850 flex overflow-hidden">
+    <div className={`w-screen h-screen ${COLORS.bg.secondary} flex overflow-hidden`}>
+      {/* Room Info Sidebar - Left */}
+      <div
+        className={`${COLORS.bg.secondary} border-r ${COLORS.border.primary} transition-all duration-300 overflow-hidden ${
+          infoOpen ? "w-80" : "w-0"
+        }`}
+      >
+        {infoOpen && (
+          <RoomInfo
+            roomId={roomId!}
+            peerId={id}
+            remotePeerId={remotePeerId}
+            onClose={() => setInfoOpen(false)}
+          />
+        )}
+      </div>
+
       {/* Video Area */}
       <div
         className={`flex-1 flex flex-col transition-all duration-300 h-full min-h-0 ${
@@ -142,7 +173,13 @@ export function RoomPage() {
       >
         <VideoArea
           onToggleChat={() => setChatOpen(!chatOpen)}
+          onToggleInfo={() => setInfoOpen(!infoOpen)}
+          onLeaveRoom={() => {
+            disconnectWSRef.current?.();
+            navigate("/");
+          }}
           chatOpen={chatOpen}
+          infoOpen={infoOpen}
           roomId={roomId}
           peerId={id}
           remotePeerId={remotePeerId}
@@ -150,9 +187,9 @@ export function RoomPage() {
         />
       </div>
 
-      {/* Chat Sidebar */}
+      {/* Chat Sidebar - Right */}
       <div
-        className={`bg-gray-800 border-l border-gray-700 transition-all duration-300 overflow-hidden ${
+        className={`${COLORS.bg.secondary} border-l ${COLORS.border.primary} transition-all duration-300 overflow-hidden ${
           chatOpen ? "w-1/3" : "w-0"
         }`}
       >

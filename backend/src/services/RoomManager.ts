@@ -5,6 +5,7 @@ interface Room {
 }
 
 export class RoomManager {
+  // switch to DB 
   private rooms: Map<string, Room> = new Map();
 
   createRoom(): string {

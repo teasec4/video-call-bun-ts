@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { API_URL } from "../config/api";
+import { COLORS } from "../config/colors";
 
 interface RoomControlProps {
   roomId: string | null;
@@ -69,19 +70,19 @@ export function RoomControl({ roomId, onRoomCreated, onJoinRoom }: RoomControlPr
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-gray-800 rounded-lg border border-gray-700">
-      <h2 className="text-xl font-bold text-white mb-6">Video Room</h2>
+    <div className={`w-full max-w-md mx-auto p-6 ${COLORS.bg.secondary} rounded-lg border ${COLORS.border.primary}`}>
+      <h2 className={`text-xl font-bold ${COLORS.text.primary} mb-6`}>Video Room</h2>
 
       {roomId ? (
         <div className="space-y-4">
-          <div className="bg-gray-900 p-4 rounded border border-gray-600">
-            <p className="text-sm text-gray-400 mb-2">Room ID:</p>
-            <p className="text-white font-mono break-all">{roomId}</p>
+          <div className={`${COLORS.bg.primary} p-4 rounded border ${COLORS.border.secondary}`}>
+            <p className={`text-sm ${COLORS.text.muted} mb-2`}>Room ID:</p>
+            <p className={`${COLORS.text.primary} font-mono break-all`}>{roomId}</p>
           </div>
 
           <button
             onClick={copyRoomLink}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition"
+            className={`w-full flex items-center justify-center gap-2 ${COLORS.button.primary} ${COLORS.button.primaryHover} ${COLORS.text.primary} py-3 rounded-lg transition`}
           >
             {copied ? (
               <>
@@ -94,14 +95,14 @@ export function RoomControl({ roomId, onRoomCreated, onJoinRoom }: RoomControlPr
             )}
           </button>
 
-          <p className="text-sm text-gray-400 text-center">
+          <p className={`text-sm ${COLORS.text.muted} text-center`}>
             Share the link to invite others to join
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
+            <label className={`block text-sm ${COLORS.text.muted} mb-2`}>
               Room ID (to join)
             </label>
             <input
@@ -109,31 +110,31 @@ export function RoomControl({ roomId, onRoomCreated, onJoinRoom }: RoomControlPr
               value={inputRoomId}
               onChange={(e) => setInputRoomId(e.target.value)}
               placeholder="Paste room ID here"
-              className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              className={`w-full px-4 py-2 ${COLORS.bg.primary} border ${COLORS.border.primary} rounded ${COLORS.text.primary} placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-offset-2`}
             />
           </div>
 
           <button
             onClick={handleJoinRoom}
             disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white py-3 rounded-lg transition"
+            className={`w-full ${COLORS.button.secondary} ${COLORS.button.secondaryHover} disabled:${COLORS.bg.tertiary} ${COLORS.text.primary} py-3 rounded-lg transition`}
           >
             {loading ? "Joining..." : "Join Room"}
           </button>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-600"></div>
+              <div className={`w-full border-t ${COLORS.border.primary}`}></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-800 text-gray-400">or</span>
+              <span className={`px-2 ${COLORS.bg.secondary} ${COLORS.text.muted}`}>or</span>
             </div>
           </div>
 
           <button
             onClick={handleCreateRoom}
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white py-3 rounded-lg transition"
+            className={`w-full ${COLORS.button.primary} ${COLORS.button.primaryHover} disabled:${COLORS.bg.tertiary} ${COLORS.text.primary} py-3 rounded-lg transition`}
           >
             {loading ? "Creating..." : "Create Room"}
           </button>
@@ -141,7 +142,7 @@ export function RoomControl({ roomId, onRoomCreated, onJoinRoom }: RoomControlPr
       )}
 
       {error && (
-        <div className="mt-4 p-3 bg-red-900 text-red-200 rounded text-sm">
+        <div className={`mt-4 p-3 ${COLORS.status.error} rounded text-sm ${COLORS.text.primary}`}>
           {error}
         </div>
       )}

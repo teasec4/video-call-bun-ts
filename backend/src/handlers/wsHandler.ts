@@ -19,6 +19,8 @@ export function createWSHandlers(clientManager: ClientManager, messageStore: Mes
       };
       clientManager.addClient(client);
 
+      console.log(`✅ Client ${id} joined room ${roomId}. Total clients in room: ${existingClients.length + 1}`);
+
       // Отправляем собственный ID
       ws.send(JSON.stringify({ type: "peer-id", peerId: id }));
 
@@ -43,10 +45,19 @@ export function createWSHandlers(clientManager: ClientManager, messageStore: Mes
           }));
           
           // Уведомляем существующего пира о новом
-          otherPeer.ws.send(JSON.stringify({ 
-            type: "peer-connected", 
-            peerId: id 
-          }));
+          try {
+            if (otherPeer.ws.readyState === 1) { // WebSocket.OPEN
+              otherPeer.ws.send(JSON.stringify({ 
+                type: "peer-connected", 
+                peerId: id 
+              }));
+              console.log(`📢 Both peers notified: ${otherPeer.id} <-> ${id}`);
+            } else {
+              console.warn(`⚠️ Other peer ${otherPeer.id} WebSocket not open`);
+            }
+          } catch (err) {
+            console.error(`❌ Failed to notify existing peer:`, err);
+          }
         }
       }
     },
