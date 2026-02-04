@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import type { ThemeMode } from '../config/theme';
-import { DEFAULT_THEME, getThemeColors, generateCssVariables } from '../config/theme';
+import { DEFAULT_THEME } from '../config/theme';
 
 interface ThemeContextType {
   mode: ThemeMode;
@@ -12,23 +12,29 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'theme-mode';
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<ThemeMode>(() => {
-    // Check localStorage first
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
-      if (saved && (saved === 'dark' || saved === 'light')) {
-        return saved;
-      }
-      
-      // Check system preference
-      if (window.matchMedia?.('(prefers-color-scheme: light)').matches) {
-        return 'light';
-      }
-    }
-    
+/**
+ * Get initial theme mode (matches logic in index.html)
+ */
+function getInitialTheme(): ThemeMode {
+  if (typeof window === 'undefined') {
     return DEFAULT_THEME;
-  });
+  }
+
+  const saved = localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
+  if (saved === 'dark' || saved === 'light') {
+    return saved;
+  }
+
+  // Check system preference
+  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'dark';
+  }
+
+  return DEFAULT_THEME;
+}
+
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [mode, setMode] = useState<ThemeMode>(getInitialTheme);
 
   const setTheme = (newMode: ThemeMode) => {
     setMode(newMode);
@@ -41,20 +47,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setTheme(mode === 'dark' ? 'light' : 'dark');
   };
 
-  // Apply theme colors to DOM
+  // Apply theme to document
   useEffect(() => {
-    const colors = getThemeColors(mode);
-    const cssVariables = generateCssVariables(colors);
-    
-    // Update root element with CSS variables
-    const style = document.querySelector('style[data-theme]');
-    if (style) {
-      style.textContent = `:root { ${cssVariables} }`;
+    const html = document.documentElement;
+    if (mode === 'dark') {
+      html.classList.add('dark');
     } else {
-      const newStyle = document.createElement('style');
-      newStyle.setAttribute('data-theme', 'true');
-      newStyle.textContent = `:root { ${cssVariables} }`;
-      document.head.appendChild(newStyle);
+      html.classList.remove('dark');
     }
   }, [mode]);
 

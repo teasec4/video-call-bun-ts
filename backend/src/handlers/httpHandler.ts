@@ -37,7 +37,8 @@ export function createHttpHandler(messageStore: MessageStore, roomManager: RoomM
         headers: { "Content-Type": "application/json" },
       });
     }
-
+ 
+    // deprecated
     // GET /api/messages - все сообщения (deprecated, оставляю для совместимости)
     if (url.pathname === "/api/messages" && req.method === "GET") {
       const messages = messageStore.getMessages();
