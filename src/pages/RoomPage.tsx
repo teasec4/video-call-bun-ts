@@ -8,6 +8,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { SignalingMessage } from "../types/webrtc";
 import { COLORS } from "../config/colors";
+import { DELAYS } from "../config/constants";
 
 type Message = {
   type: string;
@@ -25,17 +26,12 @@ export function RoomPage() {
     const saved = localStorage.getItem("peerId");
     return saved || uuidv4();
   });
+  const webrtcRef = useRef<ReturnType<typeof useWebRTC> | null>(null);
+  const disconnectWSRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     localStorage.setItem("peerId", id);
   }, [id]);
-
-  // Ref для хранения webrtc методов
-  const webrtcRef = useRef<ReturnType<typeof useWebRTC> | null>(null);
-
-  // Мемоизируем callbacks для WebSocket
-  // Placeholder для disconnect функции
-  const disconnectWSRef = useRef<(() => void) | null>(null);
 
   const handleWebSocketMessage = useCallback((message: SignalingMessage) => {
     // Обработка чата
@@ -65,17 +61,12 @@ export function RoomPage() {
 
   const handlePeerConnected = useCallback((peerId: string) => {
     console.log("🤝 Peer connected:", peerId);
-    // Закрываем старое соединение если оно есть
-    if (webrtcRef.current && (webrtcRef.current.webrtcState.isCalling || webrtcRef.current.webrtcState.callActive)) {
-      console.log("🔄 Previous call active, hanging up before new connection...");
-      webrtcRef.current.hangup();
-    }
     // Автоматически начинаем звонок когда подключается пир
     setTimeout(() => {
       if (webrtcRef.current && !webrtcRef.current.webrtcState.isCalling && !webrtcRef.current.webrtcState.callActive) {
         webrtcRef.current.startCall(peerId);
       }
-    }, 100); // Небольшая задержка для очистки ресурсов
+    }, DELAYS.PEER_CALL_INIT);
   }, []);
 
   const handleRoomClosed = useCallback((reason: string) => {
@@ -91,7 +82,7 @@ export function RoomPage() {
     // Выходим на главную страницу
     setTimeout(() => {
       navigate("/");
-    }, 300);
+    }, DELAYS.ROOM_EXIT);
   }, [navigate]);
 
   // WebSocket хук
@@ -141,6 +132,14 @@ export function RoomPage() {
     });
   }, [sendWS, id]);
 
+  // Memoized callbacks to prevent unnecessary rerenders
+  const handleToggleChat = useCallback(() => setChatOpen(prev => !prev), []);
+  const handleToggleInfo = useCallback(() => setInfoOpen(prev => !prev), []);
+  const handleLeaveRoom = useCallback(() => {
+    disconnectWSRef.current?.();
+    navigate("/");
+  }, [navigate]);
+
 
 
   if (!roomId) {
@@ -172,19 +171,16 @@ export function RoomPage() {
         }`}
       >
         <VideoArea
-          onToggleChat={() => setChatOpen(!chatOpen)}
-          onToggleInfo={() => setInfoOpen(!infoOpen)}
-          onLeaveRoom={() => {
-            disconnectWSRef.current?.();
-            navigate("/");
-          }}
-          chatOpen={chatOpen}
-          infoOpen={infoOpen}
-          roomId={roomId}
-          peerId={id}
-          remotePeerId={remotePeerId}
-          webrtc={webrtc}
-        />
+           onToggleChat={handleToggleChat}
+           onToggleInfo={handleToggleInfo}
+           onLeaveRoom={handleLeaveRoom}
+           chatOpen={chatOpen}
+           infoOpen={infoOpen}
+           roomId={roomId}
+           peerId={id}
+           remotePeerId={remotePeerId}
+           webrtc={webrtc}
+         />
       </div>
 
       {/* Chat Sidebar - Right */}

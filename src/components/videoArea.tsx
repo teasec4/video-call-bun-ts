@@ -32,33 +32,36 @@ export function VideoArea({
 
   // Инициализация локального потока при монтировании
   useEffect(() => {
-    if (!webrtc.mediaState.localStream) {
-      webrtc.initializeLocalStream(webrtc.mediaState.selectedCameraId).catch((err) => {
-        console.error("Failed to initialize local stream:", err);
-        alert("Allow camera and microphone access");
-      });
-    }
-    // Загружаем список камер при монтировании
-    if (webrtc.mediaState.cameras.length === 0) {
-      webrtc.getCameras();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Только при монтировании
+    // Only initialize once
+    let isInitialized = false;
+
+    const initialize = async () => {
+      if (isInitialized) return;
+      isInitialized = true;
+
+      if (!webrtc.mediaState.localStream) {
+        try {
+          await webrtc.initializeLocalStream(webrtc.mediaState.selectedCameraId);
+        } catch (err) {
+          console.error("Failed to initialize local stream:", err);
+          alert("Allow camera and microphone access");
+        }
+      }
+
+      if (webrtc.mediaState.cameras.length === 0) {
+        webrtc.getCameras();
+      }
+    };
+
+    initialize();
+  }, [webrtc]);
 
   // Обновление локального видео элемента
   useEffect(() => {
-    if (localVideoRef.current && webrtc.mediaState.localStream) {
+    if (localVideoRef.current && webrtc.mediaState.localStream && showLocalVideo) {
       localVideoRef.current.srcObject = webrtc.mediaState.localStream;
     }
-  }, [webrtc.mediaState.localStream]);
-
-  // Переподключение видео при разворачивании минимизированного окна
-  useEffect(() => {
-    if (showLocalVideo && localVideoRef.current && webrtc.mediaState.localStream) {
-      localVideoRef.current.srcObject = webrtc.mediaState.localStream;
-      console.log("🎥 Restored local video stream");
-    }
-  }, [showLocalVideo, webrtc.mediaState.localStream]);
+  }, [webrtc.mediaState.localStream, showLocalVideo]);
 
   // Обновление удаленного видео элемента
   useEffect(() => {

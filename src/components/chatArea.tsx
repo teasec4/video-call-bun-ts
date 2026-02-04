@@ -32,7 +32,7 @@ export function ChatArea({messages, onSendMessage, myId} : ChatAreaProps) {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
         {messages.map((msg, index) => (
-          <div key={index} className={`flex ${msg.from === myId ? "justify-end" : "justify-start"} items-start`}>
+          <div key={`${msg.from}-${index}`} className={`flex ${msg.from === myId ? "justify-end" : "justify-start"} items-start`}>
             <div
               className={`px-4 py-2 rounded-lg max-w-xs ${
                 msg.from === myId 

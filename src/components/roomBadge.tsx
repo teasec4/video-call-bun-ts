@@ -1,6 +1,7 @@
 import { Copy, Check } from "lucide-react";
 import { useState } from "react";
 import { COLORS } from "../config/colors";
+import { DELAYS } from "../config/constants";
 
 interface RoomBadgeProps {
   roomId: string;
@@ -12,7 +13,7 @@ export function RoomBadge({ roomId }: RoomBadgeProps) {
   const copyRoomId = () => {
     navigator.clipboard.writeText(roomId);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), DELAYS.COPY_FEEDBACK);
   };
 
   return (

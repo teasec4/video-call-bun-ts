@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { SignalingMessage, SignalingMessageType } from "../types/webrtc";
 import { WS_URL } from "../config/api";
+import { WEBSOCKET_CONFIG } from "../config/constants";
 
 interface UseWebSocketOptions {
   roomId: string;
@@ -8,7 +9,6 @@ interface UseWebSocketOptions {
   onMessage?: (message: SignalingMessage) => void;
   onPeerConnected?: (peerId: string) => void;
   onRoomClosed?: (reason: string) => void;
-  // perheps switch to Bool onRoomClosed? :(roomClose: bool) => void;
 }
 
 export function useWebSocket({
@@ -23,7 +23,6 @@ export function useWebSocket({
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
   const reconnectAttempts = useRef(0);
-  const maxReconnectAttempts = 5;
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -80,9 +79,12 @@ export function useWebSocket({
         setRemotePeerId(null);
 
         // Попытка переподключения
-        if (reconnectAttempts.current < maxReconnectAttempts) {
+        if (reconnectAttempts.current < WEBSOCKET_CONFIG.MAX_RECONNECT_ATTEMPTS) {
           reconnectAttempts.current++;
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 10000);
+          const delay = Math.min(
+            WEBSOCKET_CONFIG.BASE_RECONNECT_DELAY * Math.pow(2, reconnectAttempts.current),
+            WEBSOCKET_CONFIG.MAX_RECONNECT_DELAY
+          );
           console.log(`🔄 Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current})`);
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();

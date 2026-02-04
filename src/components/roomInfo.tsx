@@ -1,6 +1,7 @@
 import { X, Copy, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { COLORS } from "../config/colors";
+import { DELAYS } from "../config/constants";
 
 type RoomInfoProps = {
   roomId: string;
@@ -11,12 +12,23 @@ type RoomInfoProps = {
 
 export function RoomInfo({ roomId, peerId, remotePeerId, onClose }: RoomInfoProps) {
   const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(roomId);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCopied(false), DELAYS.COPY_FEEDBACK) as unknown as number;
     } catch (err) {
       console.error("❌ Failed to copy:", err);
       // Fallback для старых браузеров
@@ -29,7 +41,8 @@ export function RoomInfo({ roomId, peerId, remotePeerId, onClose }: RoomInfoProp
       try {
         document.execCommand("copy");
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => setCopied(false), DELAYS.COPY_FEEDBACK) as unknown as number;
       } catch (fallbackErr) {
         console.error("❌ Fallback copy failed:", fallbackErr);
       }

@@ -1,5 +1,6 @@
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useReducer, useCallback, useEffect } from "react";
 import type { WebRTCState, MediaState } from "../types/webrtc";
+import { WEBRTC_CONFIG } from "../config/constants";
 
 interface UseWebRTCOptions {
   remotePeerId: string | null;
@@ -7,32 +8,168 @@ interface UseWebRTCOptions {
   onRemoteStream?: (stream: MediaStream) => void;
 }
 
-const ICE_SERVERS = [
-  { urls: "stun:stun.l.google.com:19302" },
-  { urls: "stun:stun1.l.google.com:19302" },
-];
+interface WebRTCAction {
+  type: string;
+  payload?: any;
+}
 
-export function useWebRTC({
-  remotePeerId,
-  onSendSignaling,
-  onRemoteStream,
-}: UseWebRTCOptions) {
-  const [webrtcState, setWebRTCState] = useState<WebRTCState>({
+interface WebRTCFullState {
+  webrtcState: WebRTCState;
+  mediaState: MediaState;
+}
+
+const initialState: WebRTCFullState = {
+  webrtcState: {
     isCalling: false,
     callActive: false,
     connectionState: null,
     iceConnectionState: null,
     signalingState: null,
-  });
-
-  const [mediaState, setMediaState] = useState<MediaState>({
+  },
+  mediaState: {
     localStream: null,
     remoteStream: null,
     videoEnabled: true,
     audioEnabled: true,
     cameras: [],
     selectedCameraId: "",
-  });
+  },
+};
+
+function webrtcReducer(state: WebRTCFullState, action: WebRTCAction): WebRTCFullState {
+  switch (action.type) {
+    // Media actions
+    case 'SET_CAMERAS':
+      return {
+        ...state,
+        mediaState: {
+          ...state.mediaState,
+          cameras: action.payload.cameras,
+          selectedCameraId: action.payload.selectedCameraId || state.mediaState.selectedCameraId,
+        },
+      };
+
+    case 'SET_LOCAL_STREAM':
+      return {
+        ...state,
+        mediaState: {
+          ...state.mediaState,
+          localStream: action.payload.stream,
+          videoEnabled: action.payload.videoEnabled,
+          audioEnabled: action.payload.audioEnabled,
+        },
+      };
+
+    case 'SET_REMOTE_STREAM':
+      return {
+        ...state,
+        mediaState: {
+          ...state.mediaState,
+          remoteStream: action.payload,
+        },
+      };
+
+    case 'TOGGLE_VIDEO':
+      return {
+        ...state,
+        mediaState: {
+          ...state.mediaState,
+          videoEnabled: !state.mediaState.videoEnabled,
+        },
+      };
+
+    case 'TOGGLE_AUDIO':
+      return {
+        ...state,
+        mediaState: {
+          ...state.mediaState,
+          audioEnabled: !state.mediaState.audioEnabled,
+        },
+      };
+
+    case 'SELECT_CAMERA':
+      return {
+        ...state,
+        mediaState: {
+          ...state.mediaState,
+          selectedCameraId: action.payload,
+        },
+      };
+
+    // WebRTC connection actions
+    case 'START_CALL':
+      return {
+        ...state,
+        webrtcState: {
+          ...state.webrtcState,
+          isCalling: true,
+        },
+      };
+
+    case 'CALL_ACTIVE':
+      return {
+        ...state,
+        webrtcState: {
+          ...state.webrtcState,
+          isCalling: false,
+          callActive: true,
+        },
+      };
+
+    case 'END_CALL':
+      return {
+        ...state,
+        webrtcState: {
+          ...state.webrtcState,
+          isCalling: false,
+          callActive: false,
+          connectionState: null,
+          iceConnectionState: null,
+        },
+        mediaState: {
+          ...state.mediaState,
+          remoteStream: null,
+        },
+      };
+
+    case 'SET_CONNECTION_STATE':
+      return {
+        ...state,
+        webrtcState: {
+          ...state.webrtcState,
+          connectionState: action.payload,
+        },
+      };
+
+    case 'SET_ICE_CONNECTION_STATE':
+      return {
+        ...state,
+        webrtcState: {
+          ...state.webrtcState,
+          iceConnectionState: action.payload,
+        },
+      };
+
+    case 'SET_SIGNALING_STATE':
+      return {
+        ...state,
+        webrtcState: {
+          ...state.webrtcState,
+          signalingState: action.payload,
+        },
+      };
+
+    default:
+      return state;
+  }
+}
+
+export function useWebRTC({
+  remotePeerId,
+  onSendSignaling,
+  onRemoteStream,
+}: UseWebRTCOptions) {
+  const [state, dispatch] = useReducer(webrtcReducer, initialState);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -54,23 +191,20 @@ export function useWebRTC({
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter((device) => device.kind === "videoinput");
-      setMediaState((prev) => {
-        const newState = { ...prev, cameras: videoDevices };
-        // Устанавливаем выбранную камеру только если она еще не установлена
-        if (videoDevices.length > 0 && !newState.selectedCameraId) {
-          const firstCamera = videoDevices[0];
-          if (firstCamera) {
-            newState.selectedCameraId = firstCamera.deviceId;
-          }
-        }
-        return newState;
+      const selectedCameraId = videoDevices.length > 0 ? videoDevices[0]?.deviceId : undefined;
+      dispatch({
+        type: 'SET_CAMERAS',
+        payload: {
+          cameras: videoDevices,
+          selectedCameraId,
+        },
       });
       return videoDevices;
     } catch (err) {
       console.error("❌ Failed to enumerate devices:", err);
       return [];
     }
-  }, []); // Убрали зависимость от mediaState.selectedCameraId
+  }, []);
 
   // Инициализация локального медиа потока
   const initializeLocalStream = useCallback(async (cameraId?: string) => {
@@ -78,18 +212,20 @@ export function useWebRTC({
       const constraints: MediaStreamConstraints = {
         audio: true,
         video: cameraId
-          ? { deviceId: { exact: cameraId }, width: { ideal: 1280 }, height: { ideal: 720 } }
-          : { width: { ideal: 1280 }, height: { ideal: 720 } },
+          ? { deviceId: { exact: cameraId }, width: { ideal: WEBRTC_CONFIG.VIDEO_WIDTH }, height: { ideal: WEBRTC_CONFIG.VIDEO_HEIGHT } }
+          : { width: { ideal: WEBRTC_CONFIG.VIDEO_WIDTH }, height: { ideal: WEBRTC_CONFIG.VIDEO_HEIGHT } },
       };
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       localStreamRef.current = stream;
-      setMediaState((prev) => ({
-        ...prev,
-        localStream: stream,
-        videoEnabled: stream.getVideoTracks()[0]?.enabled ?? true,
-        audioEnabled: stream.getAudioTracks()[0]?.enabled ?? true,
-      }));
+      dispatch({
+        type: 'SET_LOCAL_STREAM',
+        payload: {
+          stream,
+          videoEnabled: stream.getVideoTracks()[0]?.enabled ?? true,
+          audioEnabled: stream.getAudioTracks()[0]?.enabled ?? true,
+        },
+      });
 
       return stream;
     } catch (err) {
@@ -107,7 +243,7 @@ export function useWebRTC({
       pcRef.current = null;
     }
 
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    const pc = new RTCPeerConnection({ iceServers: WEBRTC_CONFIG.ICE_SERVERS });
 
     // Добавляем локальные треки
     stream.getTracks().forEach((track) => {
@@ -120,7 +256,7 @@ export function useWebRTC({
       if (event.streams && event.streams[0]) {
         const stream = event.streams[0];
         remoteStreamRef.current = stream;
-        setMediaState((prev) => ({ ...prev, remoteStream: stream }));
+        dispatch({ type: 'SET_REMOTE_STREAM', payload: stream });
         onRemoteStreamRef.current?.(stream);
       }
     };
@@ -139,7 +275,7 @@ export function useWebRTC({
     // Отслеживание состояний
     pc.onconnectionstatechange = () => {
       const state = pc.connectionState;
-      setWebRTCState((prev) => ({ ...prev, connectionState: state }));
+      dispatch({ type: 'SET_CONNECTION_STATE', payload: state });
       console.log("🔗 Connection state:", state);
       
       if (state === "failed" || state === "disconnected") {
@@ -149,31 +285,20 @@ export function useWebRTC({
           currentPC.close();
           pcRef.current = null;
         }
-        setWebRTCState((prev) => ({
-          ...prev,
-          isCalling: false,
-          callActive: false,
-          connectionState: null,
-          iceConnectionState: null,
-          signalingState: null,
-        }));
-        setMediaState((prev) => ({
-          ...prev,
-          remoteStream: null,
-        }));
+        dispatch({ type: 'END_CALL' });
         onSendSignalingRef.current?.({ type: "hang-up" });
       }
     };
 
     pc.oniceconnectionstatechange = () => {
       const state = pc.iceConnectionState;
-      setWebRTCState((prev) => ({ ...prev, iceConnectionState: state }));
+      dispatch({ type: 'SET_ICE_CONNECTION_STATE', payload: state });
       console.log("❄️ ICE connection state:", state);
     };
 
     pc.onsignalingstatechange = () => {
       const state = pc.signalingState;
-      setWebRTCState((prev) => ({ ...prev, signalingState: state }));
+      dispatch({ type: 'SET_SIGNALING_STATE', payload: state });
       console.log("📡 Signaling state:", state);
     };
 
@@ -269,10 +394,10 @@ export function useWebRTC({
     try {
       await pcRef.current.setRemoteDescription(new RTCSessionDescription(answer));
       await processIceCandidateQueue(pcRef.current);
-      setWebRTCState((prev) => ({ ...prev, callActive: true }));
+      dispatch({ type: 'CALL_ACTIVE' });
     } catch (err) {
       console.error("❌ Failed to handle answer:", err);
-      setWebRTCState((prev) => ({ ...prev, isCalling: false }));
+      dispatch({ type: 'START_CALL' }); // Reset calling state
     }
   }, []);
 
@@ -314,7 +439,7 @@ export function useWebRTC({
   // Начало звонка (создание offer)
   const startCall = useCallback(async (targetPeerId?: string) => {
     // Проверяем, что уже не идет звонок
-    if (webrtcState.isCalling || webrtcState.callActive) {
+    if (state.webrtcState.isCalling || state.webrtcState.callActive) {
       console.log("⚠️ Call already in progress, ignoring startCall");
       return;
     }
@@ -326,7 +451,7 @@ export function useWebRTC({
     }
 
     if (!localStreamRef.current) {
-      await initializeLocalStream(mediaState.selectedCameraId);
+      await initializeLocalStream(state.mediaState.selectedCameraId);
     }
 
     if (!localStreamRef.current) {
@@ -335,13 +460,13 @@ export function useWebRTC({
     }
 
     // Проверяем еще раз после получения потока
-    if (webrtcState.isCalling || webrtcState.callActive) {
+    if (state.webrtcState.isCalling || state.webrtcState.callActive) {
       console.log("⚠️ Call started while getting stream, aborting");
       return;
     }
 
     const pc = createPeerConnection(localStreamRef.current);
-    setWebRTCState((prev) => ({ ...prev, isCalling: true }));
+    dispatch({ type: 'START_CALL' });
 
     try {
       const offer = await pc.createOffer();
@@ -354,13 +479,13 @@ export function useWebRTC({
       });
     } catch (err) {
       console.error("❌ Failed to create offer:", err);
-      setWebRTCState((prev) => ({ ...prev, isCalling: false }));
+      dispatch({ type: 'END_CALL' });
       if (pcRef.current) {
         pcRef.current.close();
         pcRef.current = null;
       }
     }
-  }, [initializeLocalStream, createPeerConnection, mediaState.selectedCameraId, webrtcState.isCalling, webrtcState.callActive]);
+  }, [initializeLocalStream, createPeerConnection, state.mediaState.selectedCameraId, state.webrtcState]);
 
   // Завершение звонка
   const hangup = useCallback(() => {
@@ -397,42 +522,29 @@ export function useWebRTC({
     }
 
     // Очищаем состояние
-    setWebRTCState({
-      isCalling: false,
-      callActive: false,
-      connectionState: null,
-      iceConnectionState: null,
-      signalingState: null,
-    });
-
-    setMediaState((prev) => ({
-      ...prev,
-      localStream: null,
-      remoteStream: null,
-    }));
-
+    dispatch({ type: 'END_CALL' });
     iceCandidateQueueRef.current = [];
     console.log("✅ Call ended, all resources cleaned up");
-  }, []); // Убрали зависимость - используем ref
+  }, []);
 
   // Переключение видео/аудио
   const toggleVideo = useCallback(() => {
     if (localStreamRef.current) {
       localStreamRef.current.getVideoTracks().forEach((track) => {
-        track.enabled = !mediaState.videoEnabled;
+        track.enabled = !state.mediaState.videoEnabled;
       });
-      setMediaState((prev) => ({ ...prev, videoEnabled: !prev.videoEnabled }));
+      dispatch({ type: 'TOGGLE_VIDEO' });
     }
-  }, [mediaState.videoEnabled]);
+  }, [state.mediaState.videoEnabled]);
 
   const toggleAudio = useCallback(() => {
     if (localStreamRef.current) {
       localStreamRef.current.getAudioTracks().forEach((track) => {
-        track.enabled = !mediaState.audioEnabled;
+        track.enabled = !state.mediaState.audioEnabled;
       });
-      setMediaState((prev) => ({ ...prev, audioEnabled: !prev.audioEnabled }));
+      dispatch({ type: 'TOGGLE_AUDIO' });
     }
-  }, [mediaState.audioEnabled]);
+  }, [state.mediaState.audioEnabled]);
 
   // Переключение камеры
   const switchCamera = useCallback(async (cameraId: string) => {
@@ -440,10 +552,10 @@ export function useWebRTC({
 
     try {
       const constraints: MediaStreamConstraints = {
-        audio: mediaState.audioEnabled,
+        audio: state.mediaState.audioEnabled,
         video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: WEBRTC_CONFIG.VIDEO_WIDTH },
+          height: { ideal: WEBRTC_CONFIG.VIDEO_HEIGHT },
           deviceId: { exact: cameraId },
         },
       };
@@ -470,22 +582,21 @@ export function useWebRTC({
       }
       localStreamRef.current.addTrack(newVideoTrack);
 
-      setMediaState((prev) => ({ ...prev, selectedCameraId: cameraId }));
+      dispatch({ type: 'SELECT_CAMERA', payload: cameraId });
     } catch (err) {
       console.error("❌ Failed to switch camera:", err);
     }
-  }, [mediaState.audioEnabled]);
+  }, [state.mediaState.audioEnabled]);
 
   // Инициализация при монтировании - только один раз
   useEffect(() => {
     getCameras();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Вызываем только при монтировании
+  }, [getCameras]);
 
   return {
     // State
-    webrtcState,
-    mediaState,
+    webrtcState: state.webrtcState,
+    mediaState: state.mediaState,
     
     // Methods
     initializeLocalStream,
