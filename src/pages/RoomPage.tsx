@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import clsx from "clsx";
 import { ChatArea } from "../components/chatArea";
 import { VideoArea } from "../components/videoArea";
 import { RoomInfo } from "../components/roomInfo";
@@ -7,7 +8,7 @@ import { useWebRTC } from "../hooks/useWebRTC";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { SignalingMessage } from "../types/webrtc";
-import { COLORS } from "../config/colors";
+import { colorStyles } from "../config/styles";
 import { DELAYS } from "../config/constants";
 
 type Message = {
@@ -34,19 +35,15 @@ export function RoomPage() {
   }, [id]);
 
   const handleWebSocketMessage = useCallback((message: SignalingMessage) => {
-    // Обработка чата
     if (message.type === "chat") {
       console.log(`📨 Chat message from: ${message.from}, myId: ${id}, isMine: ${message.from === id}`);
-      // Не добавляем если это наше сообщение (будет дубль - уже добавили в handleSendMessage)
       if (message.from !== id) {
         setMsg((prevMsg) => [...prevMsg, message as Message]);
       }
     }
-    // Обработка истории сообщений
     else if (message.type === "message-history" && message.messages) {
       setMsg(message.messages.filter((m: any) => m.type === "chat"));
     }
-    // Обработка WebRTC сообщений
     else if (message.type === "offer" && message.from && message.payload && webrtcRef.current) {
       webrtcRef.current.handleOffer({ ...message.payload, from: message.from });
     } else if (message.type === "answer" && message.from && message.payload && webrtcRef.current) {
@@ -61,7 +58,6 @@ export function RoomPage() {
 
   const handlePeerConnected = useCallback((peerId: string) => {
     console.log("🤝 Peer connected:", peerId);
-    // Автоматически начинаем звонок когда подключается пир
     setTimeout(() => {
       if (webrtcRef.current && !webrtcRef.current.webrtcState.isCalling && !webrtcRef.current.webrtcState.callActive) {
         webrtcRef.current.startCall(peerId);
@@ -71,21 +67,17 @@ export function RoomPage() {
 
   const handleRoomClosed = useCallback((reason: string) => {
     console.log("🚪 Room closed:", reason);
-    // Заканчиваем звонок перед выходом
     if (webrtcRef.current) {
       webrtcRef.current.hangup();
     }
-    // Отключаемся от WebSocket
     if (disconnectWSRef.current) {
       disconnectWSRef.current();
     }
-    // Выходим на главную страницу
     setTimeout(() => {
       navigate("/");
     }, DELAYS.ROOM_EXIT);
   }, [navigate]);
 
-  // WebSocket хук
   const { remotePeerId, send: sendWS, disconnect: disconnectWS } = useWebSocket({
     roomId: roomId!,
     peerId: id,
@@ -94,45 +86,39 @@ export function RoomPage() {
     onRoomClosed: handleRoomClosed,
   });
 
-  // Сохраняем disconnect функцию в ref
   useEffect(() => {
     disconnectWSRef.current = disconnectWS;
   }, [disconnectWS]);
 
-  // WebRTC хук - создаем после получения sendWS
   const handleSendSignaling = useCallback((message: { type: string; to?: string; payload?: any }) => {
     sendWS(message);
   }, [sendWS]);
 
   const webrtc = useWebRTC({
-    remotePeerId, // Используем remotePeerId из WebSocket
+    remotePeerId,
     onSendSignaling: handleSendSignaling,
     onRemoteStream: useCallback((stream: MediaStream) => {
       console.log("✅ Remote stream received:", stream);
     }, []),
   });
 
-  // Сохраняем webrtc в ref - обновляем при изменении методов
   useEffect(() => {
     webrtcRef.current = webrtc;
   }, [webrtc]);
 
   const handleSendMessage = useCallback((text: string) => {
-    // Добавляем своё сообщение сразу в локальный стейт
     setMsg((prevMsg) => [...prevMsg, {
       type: "chat",
       from: id,
       payload: text,
     }]);
     
-    // Отправляем на сервер
     sendWS({
       type: "chat",
       payload: text,
     });
   }, [sendWS, id]);
 
-  // Memoized callbacks to prevent unnecessary rerenders
   const handleToggleChat = useCallback(() => setChatOpen(prev => !prev), []);
   const handleToggleInfo = useCallback(() => setInfoOpen(prev => !prev), []);
   const handleLeaveRoom = useCallback(() => {
@@ -140,19 +126,18 @@ export function RoomPage() {
     navigate("/");
   }, [navigate]);
 
-
-
   if (!roomId) {
     return <div>Room ID is required</div>;
   }
 
   return (
-    <div className={`w-screen h-screen ${COLORS.bg.secondary} flex overflow-hidden`}>
-      {/* Room Info Sidebar - Left */}
+    <div style={colorStyles.bgSecondary} className="w-screen h-screen flex overflow-hidden">
       <div
-        className={`${COLORS.bg.secondary} border-r ${COLORS.border.primary} transition-all duration-300 overflow-hidden ${
-          infoOpen ? "w-80" : "w-0"
-        }`}
+        style={{borderRightColor: 'var(--bd-primary)'}}
+        className={clsx(
+          'border-r transition-all duration-300 overflow-hidden',
+          infoOpen ? 'w-80' : 'w-0'
+        )}
       >
         {infoOpen && (
           <RoomInfo
@@ -164,11 +149,11 @@ export function RoomPage() {
         )}
       </div>
 
-      {/* Video Area */}
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 h-full min-h-0 ${
-          chatOpen ? "w-2/3" : "w-full"
-        }`}
+        className={clsx(
+          'flex-1 flex flex-col transition-all duration-300 h-full min-h-0',
+          chatOpen ? 'w-2/3' : 'w-full'
+        )}
       >
         <VideoArea
            onToggleChat={handleToggleChat}
@@ -183,11 +168,12 @@ export function RoomPage() {
          />
       </div>
 
-      {/* Chat Sidebar - Right */}
       <div
-        className={`${COLORS.bg.secondary} border-l ${COLORS.border.primary} transition-all duration-300 overflow-hidden ${
-          chatOpen ? "w-1/3" : "w-0"
-        }`}
+        style={{borderLeftColor: 'var(--bd-primary)'}}
+        className={clsx(
+          'border-l transition-all duration-300 overflow-hidden',
+          chatOpen ? 'w-1/3' : 'w-0'
+        )}
       >
         {chatOpen && (
           <ChatArea

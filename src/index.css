@@ -1,4 +1,57 @@
 @import "tailwindcss";
 
+/* Custom color utilities for light mode */
+:root {
+  --bg-primary: #f5f5f5;
+  --bg-secondary: #e8e8e8;
+  --bg-tertiary: #d9d9d9;
+  --bg-overlay: #ffffff;
+  
+  --txt-primary: #1a1a1a;
+  --txt-secondary: #404040;
+  --txt-tertiary: #606060;
+  --txt-muted: #808080;
+  --txt-disabled: #a0a0a0;
+  
+  --bd-primary: #d0d0d0;
+  --bd-secondary: #e0e0e0;
+  --bd-muted: #f0f0f0;
+  
+  --st-success: #6b9970;
+  --st-error: #a85555;
+  --st-warning: #a89f5f;
+  --st-info: #5a7f9f;
+  
+  --btn-primary: #cccccc;
+  --btn-primary-hover: #b3b3b3;
+  --btn-secondary: #b3b3b3;
+  --btn-secondary-hover: #999999;
+}
 
-
+/* Dark mode colors */
+:root.dark {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #3d3d3d;
+  --bg-overlay: #000000;
+  
+  --txt-primary: #ffffff;
+  --txt-secondary: #e0e0e0;
+  --txt-tertiary: #b0b0b0;
+  --txt-muted: #808080;
+  --txt-disabled: #606060;
+  
+  --bd-primary: #404040;
+  --bd-secondary: #2d2d2d;
+  --bd-muted: #1a1a1a;
+  
+  --st-success: #4a7c59;
+  --st-error: #8b4545;
+  --st-warning: #8b7f47;
+  --st-info: #4a5f7f;
+  
+  --btn-primary: #333333;
+  --btn-primary-hover: #454545;
+  --btn-secondary: #4a4a4a;
+  --btn-secondary-hover: #606060;
+}

@@ -1,65 +1,57 @@
 /**
- * Tailwind color class patterns
- * Semantic color combinations for common UI patterns
+ * Color system with literal Tailwind classes
+ * Each property contains a complete set of Tailwind classes including dark: variants
  */
 
 export const COLORS = {
   // Backgrounds
   bg: {
-    primary: 'bg-bg-primary',
-    secondary: 'bg-bg-secondary',
-    tertiary: 'bg-bg-tertiary',
-    overlay: 'bg-bg-overlay',
+    primary: 'bg-bg-primary-light dark:bg-bg-primary-dark',
+    primaryLight: 'bg-opacity-80 dark:bg-opacity-80',
+    primaryLighter: 'bg-opacity-50 dark:bg-opacity-50',
+    secondary: 'bg-bg-secondary-light dark:bg-bg-secondary-dark',
+    secondaryLight: 'bg-bg-secondary-light/80 dark:bg-bg-secondary-dark/80',
+    tertiary: 'bg-bg-tertiary-light dark:bg-bg-tertiary-dark',
+    overlay: 'bg-bg-overlay-light dark:bg-bg-overlay-dark',
   },
 
   // Text
   text: {
-    primary: 'text-text-primary',
-    secondary: 'text-text-secondary',
-    tertiary: 'text-text-tertiary',
-    muted: 'text-text-muted',
-    disabled: 'text-text-disabled',
+    primary: 'text-txt-primary-light dark:text-txt-primary-dark',
+    secondary: 'text-txt-secondary-light dark:text-txt-secondary-dark',
+    tertiary: 'text-txt-tertiary-light dark:text-txt-tertiary-dark',
+    muted: 'text-txt-muted',
+    disabled: 'text-txt-disabled-light dark:text-txt-disabled-dark',
   },
 
   // Borders
   border: {
-    primary: 'border-border-primary',
-    secondary: 'border-border-secondary',
-    muted: 'border-border-muted',
+    primary: 'border-bd-primary-light dark:border-bd-primary-dark',
+    secondary: 'border-bd-secondary-light dark:border-bd-secondary-dark',
+    muted: 'border-bd-muted-light dark:border-bd-muted-dark',
   },
 
   // Status
   status: {
-    success: 'text-status-success',
-    error: 'text-status-error',
-    warning: 'text-status-warning',
-    info: 'text-status-info',
+    success: 'bg-st-success-light dark:bg-st-success-dark',
+    error: 'bg-st-error-light dark:bg-st-error-dark',
+    warning: 'bg-st-warning-light dark:bg-st-warning-dark',
+    info: 'bg-st-info-light dark:bg-st-info-dark',
+    successText: 'text-st-success-light dark:text-st-success-dark',
+    errorText: 'text-st-error-light dark:text-st-error-dark',
   },
 
-  // Interactive elements
+  // Buttons
   button: {
-    primary: 'bg-interactive-primary hover:bg-interactive-primary-hover',
-    secondary: 'bg-interactive-secondary hover:bg-interactive-secondary-hover',
+    primary: 'bg-btn-primary-light dark:bg-btn-primary-dark text-txt-primary-light dark:text-txt-primary-dark hover:bg-btn-primary-hover-light dark:hover:bg-btn-primary-hover-dark transition',
+    secondary: 'bg-btn-secondary-light dark:bg-btn-secondary-dark text-txt-secondary-light dark:text-txt-secondary-dark hover:bg-btn-secondary-hover-light dark:hover:bg-btn-secondary-hover-dark transition',
+    primaryHover: 'hover:bg-btn-primary-hover-light dark:hover:bg-btn-primary-hover-dark',
+    secondaryHover: 'hover:bg-btn-secondary-hover-light dark:hover:bg-btn-secondary-hover-dark',
   },
 } as const;
 
-// Semantic color combinations for common patterns
-export const COLOR_PATTERNS = {
-  // Card/Panel backgrounds
-  card: `${COLORS.bg.secondary} border-border-primary border`,
-
-  // Primary button
-  btnPrimary: `${COLORS.button.primary} ${COLORS.text.primary}`,
-
-  // Secondary button
-  btnSecondary: `${COLORS.button.secondary} ${COLORS.text.primary}`,
-
-  // Input field
-  input: `${COLORS.bg.tertiary} border-border-primary border ${COLORS.text.primary} placeholder-text-muted`,
-
-  // Chat message - user
-  chatOwn: `${COLORS.bg.secondary} ${COLORS.text.primary}`,
-
-  // Chat message - other
-  chatOther: `${COLORS.bg.tertiary} ${COLORS.text.secondary}`,
+// Semantic patterns
+export const BUTTON_STYLES = {
+  primary: `bg-btn-primary-light dark:bg-btn-primary-dark text-txt-primary-light dark:text-txt-primary-dark hover:bg-btn-primary-hover-light dark:hover:bg-btn-primary-hover-dark transition`,
+  secondary: `bg-btn-secondary-light dark:bg-btn-secondary-dark text-txt-secondary-light dark:text-txt-secondary-dark hover:bg-btn-secondary-hover-light dark:hover:bg-btn-secondary-hover-dark transition`,
 } as const;

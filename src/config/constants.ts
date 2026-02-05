@@ -12,8 +12,8 @@ export const WEBRTC_CONFIG = {
   ICE_SERVERS: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-  ],
-} as const;
+  ] as RTCIceServer[],
+};
 
 // WebSocket configuration
 export const WEBSOCKET_CONFIG = {

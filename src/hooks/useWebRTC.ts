@@ -314,7 +314,7 @@ export function useWebRTC({
     }
 
     // Проверяем, что не идет уже звонок
-    if (webrtcState.isCalling || webrtcState.callActive) {
+    if (state.webrtcState.isCalling || state.webrtcState.callActive) {
       console.log("⚠️ Call already in progress, ignoring offer");
       return;
     }
@@ -329,7 +329,7 @@ export function useWebRTC({
 
     // Инициализируем локальный поток если нужно
     if (!localStreamRef.current) {
-      await initializeLocalStream(mediaState.selectedCameraId);
+      await initializeLocalStream(state.mediaState.selectedCameraId);
     }
 
     if (!localStreamRef.current) {
@@ -338,13 +338,13 @@ export function useWebRTC({
     }
 
     // Проверяем еще раз после получения потока
-    if (webrtcState.isCalling || webrtcState.callActive) {
+    if (state.webrtcState.isCalling || state.webrtcState.callActive) {
       console.log("⚠️ Call started while getting stream, aborting offer handling");
       return;
     }
 
     const pc = createPeerConnection(localStreamRef.current);
-    setWebRTCState((prev) => ({ ...prev, isCalling: true }));
+    dispatch({ type: 'START_CALL' });
 
     try {
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
@@ -359,10 +359,10 @@ export function useWebRTC({
         payload: answer,
       });
 
-      setWebRTCState((prev) => ({ ...prev, callActive: true }));
+      dispatch({ type: 'CALL_ACTIVE' });
     } catch (err) {
       console.error("❌ Failed to handle offer:", err);
-      setWebRTCState((prev) => ({ ...prev, isCalling: false }));
+      dispatch({ type: 'START_CALL' });
       // Закрываем соединение если оно было создано
       // Используем pc напрямую, так как он был создан выше
       try {
@@ -372,7 +372,7 @@ export function useWebRTC({
       }
       pcRef.current = null;
     }
-  }, [initializeLocalStream, createPeerConnection, mediaState.selectedCameraId, webrtcState.isCalling, webrtcState.callActive]);
+  }, [initializeLocalStream, createPeerConnection, state.mediaState.selectedCameraId, state.webrtcState.isCalling, state.webrtcState.callActive]);
 
   // Обработка входящего answer
   const handleAnswer = useCallback(async (answer: RTCSessionDescriptionInit & { from?: string }) => {

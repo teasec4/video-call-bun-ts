@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
+import clsx from "clsx";
 import { RoomControl } from "../components/roomControl";
-import { COLORS } from "../config/colors";
+import { colorStyles } from "../config/styles";
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export function HomePage() {
   };
 
   return (
-    <div className={`w-screen h-screen ${COLORS.bg.primary} flex items-center justify-center`}>
+    <div style={colorStyles.bgPrimary} className="w-screen h-screen flex items-center justify-center">
       <RoomControl
         roomId={null}
         onRoomCreated={handleRoomCreated}

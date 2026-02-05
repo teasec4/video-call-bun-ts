@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
+import clsx from "clsx";
 import { API_URL } from "../config/api";
-import { COLORS } from "../config/colors";
 
 interface RoomControlProps {
   roomId: string | null;
@@ -69,20 +69,37 @@ export function RoomControl({ roomId, onRoomCreated, onJoinRoom }: RoomControlPr
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const btnPrimaryStyle: React.CSSProperties = {
+    backgroundColor: 'var(--btn-primary)',
+    color: 'var(--txt-primary)',
+  };
+
+  const btnPrimaryHoverStyle: React.CSSProperties = {
+    ...btnPrimaryStyle,
+  };
+
+  const btnSecondaryStyle: React.CSSProperties = {
+    backgroundColor: 'var(--btn-secondary)',
+    color: 'var(--txt-secondary)',
+  };
+
   return (
-    <div className={`w-full max-w-md mx-auto p-6 ${COLORS.bg.secondary} rounded-lg border ${COLORS.border.primary}`}>
-      <h2 className={`text-xl font-bold ${COLORS.text.primary} mb-6`}>Video Room</h2>
+    <div style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--bd-primary)' }} className="w-full max-w-md mx-auto p-6 rounded-lg border">
+      <h2 style={{ color: 'var(--txt-primary)' }} className="text-xl font-bold mb-6">Video Room</h2>
 
       {roomId ? (
         <div className="space-y-4">
-          <div className={`${COLORS.bg.primary} p-4 rounded border ${COLORS.border.secondary}`}>
-            <p className={`text-sm ${COLORS.text.muted} mb-2`}>Room ID:</p>
-            <p className={`${COLORS.text.primary} font-mono break-all`}>{roomId}</p>
+          <div style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--bd-secondary)' }} className="p-4 rounded border">
+            <p style={{ color: 'var(--txt-muted)' }} className="text-sm mb-2">Room ID:</p>
+            <p style={{ color: 'var(--txt-primary)' }} className="font-mono break-all">{roomId}</p>
           </div>
 
           <button
             onClick={copyRoomLink}
-            className={`w-full flex items-center justify-center gap-2 ${COLORS.button.primary} ${COLORS.button.primaryHover} ${COLORS.text.primary} py-3 rounded-lg transition`}
+            style={btnPrimaryStyle}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--btn-primary-hover)')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--btn-primary)')}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-lg transition"
           >
             {copied ? (
               <>
@@ -95,14 +112,14 @@ export function RoomControl({ roomId, onRoomCreated, onJoinRoom }: RoomControlPr
             )}
           </button>
 
-          <p className={`text-sm ${COLORS.text.muted} text-center`}>
+          <p style={{ color: 'var(--txt-muted)' }} className="text-sm text-center">
             Share the link to invite others to join
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           <div>
-            <label className={`block text-sm ${COLORS.text.muted} mb-2`}>
+            <label style={{ color: 'var(--txt-muted)' }} className="block text-sm mb-2">
               Room ID (to join)
             </label>
             <input
@@ -110,31 +127,42 @@ export function RoomControl({ roomId, onRoomCreated, onJoinRoom }: RoomControlPr
               value={inputRoomId}
               onChange={(e) => setInputRoomId(e.target.value)}
               placeholder="Paste room ID here"
-              className={`w-full px-4 py-2 ${COLORS.bg.primary} border ${COLORS.border.primary} rounded ${COLORS.text.primary} placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-offset-2`}
+              style={{
+                backgroundColor: 'var(--bg-primary)',
+                color: 'var(--txt-primary)',
+                borderColor: 'var(--bd-primary)',
+              }}
+              className="w-full px-4 py-2 rounded border focus:outline-none focus:ring-2 focus:ring-offset-2"
             />
           </div>
 
           <button
             onClick={handleJoinRoom}
             disabled={loading}
-            className={`w-full ${COLORS.button.secondary} ${COLORS.button.secondaryHover} disabled:${COLORS.bg.tertiary} ${COLORS.text.primary} py-3 rounded-lg transition`}
+            style={btnSecondaryStyle}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--btn-secondary-hover)')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--btn-secondary)')}
+            className="w-full py-3 rounded-lg disabled:opacity-50 transition"
           >
             {loading ? "Joining..." : "Join Room"}
           </button>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className={`w-full border-t ${COLORS.border.primary}`}></div>
+              <div style={{ borderColor: 'var(--bd-primary)' }} className="w-full border-t"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className={`px-2 ${COLORS.bg.secondary} ${COLORS.text.muted}`}>or</span>
+              <span style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--txt-muted)' }} className="px-2">or</span>
             </div>
           </div>
 
           <button
             onClick={handleCreateRoom}
             disabled={loading}
-            className={`w-full ${COLORS.button.primary} ${COLORS.button.primaryHover} disabled:${COLORS.bg.tertiary} ${COLORS.text.primary} py-3 rounded-lg transition`}
+            style={btnPrimaryStyle}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--btn-primary-hover)')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--btn-primary)')}
+            className="w-full py-3 rounded-lg disabled:opacity-50 transition"
           >
             {loading ? "Creating..." : "Create Room"}
           </button>
@@ -142,7 +170,7 @@ export function RoomControl({ roomId, onRoomCreated, onJoinRoom }: RoomControlPr
       )}
 
       {error && (
-        <div className={`mt-4 p-3 ${COLORS.status.error} rounded text-sm ${COLORS.text.primary}`}>
+        <div style={{ backgroundColor: 'var(--st-error)', color: 'var(--txt-primary)' }} className="mt-4 p-3 rounded text-sm">
           {error}
         </div>
       )}
