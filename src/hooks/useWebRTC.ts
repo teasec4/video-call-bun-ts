@@ -1,10 +1,10 @@
 import { useRef, useReducer, useCallback, useEffect } from "react";
-import type { WebRTCState, MediaState } from "../types/webrtc";
+import type { WebRTCState, MediaState, SignalingMessageType } from "../types/webrtc";
 import { WEBRTC_CONFIG } from "../config/constants";
 
 interface UseWebRTCOptions {
   remotePeerId: string | null;
-  onSendSignaling?: (message: { type: string; to?: string; payload?: any }) => void;
+  onSendSignaling?: (message: { type: SignalingMessageType; to?: string; payload?: any }) => void;
   onRemoteStream?: (stream: MediaStream) => void;
 }
 
@@ -176,7 +176,7 @@ export function useWebRTC({
   const remoteStreamRef = useRef<MediaStream | null>(null);
   const iceCandidateQueueRef = useRef<RTCIceCandidateInit[]>([]);
   const remotePeerIdRef = useRef<string | null>(null);
-  const onSendSignalingRef = useRef<((message: { type: string; to?: string; payload?: any }) => void) | undefined>(undefined);
+  const onSendSignalingRef = useRef<((message: { type: SignalingMessageType; to?: string; payload?: any }) => void) | undefined>(undefined);
   const onRemoteStreamRef = useRef<((stream: MediaStream) => void) | undefined>(undefined);
 
   // Синхронизация refs

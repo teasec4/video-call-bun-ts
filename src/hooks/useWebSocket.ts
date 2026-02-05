@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { SignalingMessage, SignalingMessageType } from "../types/webrtc";
-import { WS_URL } from "../config/api";
 import { WEBSOCKET_CONFIG } from "../config/constants";
+
+const WS_URL = 'ws://localhost:3030';
 
 interface UseWebSocketOptions {
   roomId: string;

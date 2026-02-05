@@ -1,6 +1,5 @@
 import { PhoneOff, MessageSquare, Info, Video, VideoOff, Mic, MicOff, Camera } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import clsx from "clsx";
 import { colorStyles, createButtonHoverHandler } from "../config/styles";
 
 interface VideoAreaProps {
@@ -81,7 +80,7 @@ export function VideoArea({
         )}
         
         {showLocalVideo && webrtc.mediaState.localStream && (
-          <div style={colorStyles.bgSecondary} className="absolute bottom-6 right-6 w-48 h-36 rounded-lg shadow-lg border-2" style={{ ...colorStyles.bgSecondary, borderColor: 'var(--bd-primary)' }}>
+          <div style={{ ...colorStyles.bgSecondary, borderColor: 'var(--bd-primary)' }} className="absolute bottom-6 right-6 w-48 h-36 rounded-lg shadow-lg border-2">
             <video
               ref={localVideoRef}
               autoPlay

@@ -7,7 +7,7 @@ import { useWebSocket } from "../hooks/useWebSocket";
 import { useWebRTC } from "../hooks/useWebRTC";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
-import type { SignalingMessage } from "../types/webrtc";
+import type { SignalingMessage, SignalingMessageType } from "../types/webrtc";
 import { colorStyles } from "../config/styles";
 import { DELAYS } from "../config/constants";
 
@@ -90,7 +90,7 @@ export function RoomPage() {
     disconnectWSRef.current = disconnectWS;
   }, [disconnectWS]);
 
-  const handleSendSignaling = useCallback((message: { type: string; to?: string; payload?: any }) => {
+  const handleSendSignaling = useCallback((message: { type: SignalingMessageType; to?: string; payload?: any }) => {
     sendWS(message);
   }, [sendWS]);
 

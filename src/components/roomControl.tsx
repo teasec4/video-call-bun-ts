@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import clsx from "clsx";
-import { API_URL } from "../config/api";
+
+const API_URL = 'http://localhost:3030';
 
 interface RoomControlProps {
   roomId: string | null;
