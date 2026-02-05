@@ -133,7 +133,7 @@ export function VideoArea({
 
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex justify-center gap-4">
           {!remotePeerId ? (
-            <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', borderColor: 'var(--bd-primary)' }} className="flex items-center gap-3 px-4 py-3 rounded-lg border backdrop-blur">
+            <div style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--txt-primary)', borderColor: 'var(--bd-primary)' }} className="flex items-center gap-3 px-4 py-3 rounded-lg border backdrop-blur">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
                 <span>Waiting for peer...</span>
@@ -148,7 +148,7 @@ export function VideoArea({
               </button>
             </div>
           ) : webrtc.webrtcState.isCalling || webrtc.webrtcState.callActive ? (
-            <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', borderColor: 'var(--bd-primary)' }} className="flex items-center gap-3 px-4 py-3 rounded-lg border backdrop-blur">
+            <div style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--txt-primary)', borderColor: 'var(--bd-primary)' }} className="flex items-center gap-3 px-4 py-3 rounded-lg border backdrop-blur">
               <button
                 onClick={webrtc.toggleVideo}
                 style={webrtc.mediaState.videoEnabled ? colorStyles.buttonPrimary : colorStyles.statusError}
@@ -192,7 +192,7 @@ export function VideoArea({
               </button>
             </div>
           ) : (
-            <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', color: 'var(--txt-secondary)' }} className="flex items-center gap-2 px-4 py-2 rounded backdrop-blur">
+            <div style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--txt-primary)' }} className="flex items-center gap-2 px-4 py-2 rounded backdrop-blur">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span>Initializing call...</span>
             </div>
