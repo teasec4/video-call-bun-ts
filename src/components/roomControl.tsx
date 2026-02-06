@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Copy, Check } from "lucide-react";
 import clsx from "clsx";
 
 const API_URL = 'http://localhost:3030';
@@ -12,7 +11,6 @@ interface RoomControlProps {
 
 export function RoomControl({ roomId, onRoomCreated, onJoinRoom }: RoomControlProps) {
   const [inputRoomId, setInputRoomId] = useState("");
-  const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -62,21 +60,9 @@ export function RoomControl({ roomId, onRoomCreated, onJoinRoom }: RoomControlPr
     }
   };
 
-  const copyRoomLink = () => {
-    if (!roomId) return;
-    const link = `${window.location.origin}?room=${roomId}`;
-    navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   const btnPrimaryStyle: React.CSSProperties = {
     backgroundColor: 'var(--btn-primary)',
     color: 'var(--txt-primary)',
-  };
-
-  const btnPrimaryHoverStyle: React.CSSProperties = {
-    ...btnPrimaryStyle,
   };
 
   const btnSecondaryStyle: React.CSSProperties = {
@@ -88,36 +74,7 @@ export function RoomControl({ roomId, onRoomCreated, onJoinRoom }: RoomControlPr
     <div style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--bd-primary)' }} className="w-full max-w-md mx-auto p-6 rounded-lg border">
       <h2 style={{ color: 'var(--txt-primary)' }} className="text-xl font-bold mb-6">Video Room</h2>
 
-      {roomId ? (
-        <div className="space-y-4">
-          <div style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--bd-secondary)' }} className="p-4 rounded border">
-            <p style={{ color: 'var(--txt-muted)' }} className="text-sm mb-2">Room ID:</p>
-            <p style={{ color: 'var(--txt-primary)' }} className="font-mono break-all">{roomId}</p>
-          </div>
 
-          <button
-            onClick={copyRoomLink}
-            style={btnPrimaryStyle}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--btn-primary-hover)')}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--btn-primary)')}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-lg transition"
-          >
-            {copied ? (
-              <>
-                <Check size={20} /> Copied!
-              </>
-            ) : (
-              <>
-                <Copy size={20} /> Copy Link
-              </>
-            )}
-          </button>
-
-          <p style={{ color: 'var(--txt-muted)' }} className="text-sm text-center">
-            Share the link to invite others to join
-          </p>
-        </div>
-      ) : (
         <div className="space-y-4">
           <div>
             <label style={{ color: 'var(--txt-muted)' }} className="block text-sm mb-2">
@@ -168,7 +125,7 @@ export function RoomControl({ roomId, onRoomCreated, onJoinRoom }: RoomControlPr
             {loading ? "Creating..." : "Create Room"}
           </button>
         </div>
-      )}
+      
 
       {error && (
         <div style={{ backgroundColor: 'var(--st-error)', color: 'var(--txt-primary)' }} className="mt-4 p-3 rounded text-sm">
