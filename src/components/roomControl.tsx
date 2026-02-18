@@ -1,63 +1,32 @@
 import { useState } from "react";
 import clsx from "clsx";
+import { useHttp } from "@/hooks/useHttpConnectRoom";
 
 const API_URL = 'http://localhost:3030';
 
 interface RoomControlProps {
-  roomId: string | null;
   onRoomCreated: (roomId: string) => void;
   onJoinRoom: (roomId: string) => void;
 }
 
-export function RoomControl({ roomId, onRoomCreated, onJoinRoom }: RoomControlProps) {
+export function RoomControl({ onRoomCreated, onJoinRoom}:RoomControlProps) {
   const [inputRoomId, setInputRoomId] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
+  
+  const { createRoom, joinRoom, loading, error } = useHttp({
+    onCreateRoom: (id) => console.log("Created:", id),
+  });
+  
+  const [clientId] = useState(() => crypto.randomUUID());
+  
+  
   const handleCreateRoom = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const response = await fetch(`${API_URL}/api/room`, {
-        method: "POST",
-      });
-      const data = await response.json();
-      onRoomCreated(data.roomId);
-    } catch (err) {
-      setError("Failed to create room");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    const newRoomId = await createRoom(clientId);
+    onRoomCreated(newRoomId);
   };
-
+  
   const handleJoinRoom = async () => {
-    if (!inputRoomId.trim()) {
-      setError("Enter room ID");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    try {
-      const peerId = localStorage.getItem("peerId") || crypto.randomUUID();
-      const response = await fetch(`${API_URL}/api/room/join`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomId: inputRoomId, peerId }),
-      });
-      
-      if (!response.ok) {
-        throw new Error("Room not found");
-      }
-      
-      onJoinRoom(inputRoomId);
-    } catch (err) {
-      setError("Failed to join room");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    await joinRoom(inputRoomId, clientId);
+    onJoinRoom(inputRoomId);
   };
 
   const btnPrimaryStyle: React.CSSProperties = {

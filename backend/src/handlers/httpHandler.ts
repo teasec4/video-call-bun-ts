@@ -1,12 +1,6 @@
 import type { MessageStore } from "../services/MessageStore";
 import type { RoomManager } from "../services/RoomManager";
 
-// Валидация UUID формата
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function isValidUUID(str: string): boolean {
-  return UUID_REGEX.test(str);
-}
 
 export function createHttpHandler(messageStore: MessageStore, roomManager: RoomManager) {
   return async (req: Request, url: URL): Promise<Response | null> => {
@@ -25,12 +19,6 @@ export function createHttpHandler(messageStore: MessageStore, roomManager: RoomM
     const messagesMatch = url.pathname.match(/^\/api\/messages\/([a-f0-9-]+)$/);
     if (messagesMatch && messagesMatch[1] && req.method === "GET") {
       const roomId = messagesMatch[1];
-      if (!isValidUUID(roomId)) {
-        return new Response(JSON.stringify({ error: "Invalid room ID format" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
       const messages = messageStore.getMessagesByRoom(roomId);
       return new Response(JSON.stringify(messages), {
         status: 200,
@@ -63,12 +51,6 @@ export function createHttpHandler(messageStore: MessageStore, roomManager: RoomM
     const singleRoomMatch = url.pathname.match(/^\/api\/room\/([a-f0-9-]+)$/);
     if (singleRoomMatch && singleRoomMatch[1] && req.method === "GET") {
       const roomId = singleRoomMatch[1];
-      if (!isValidUUID(roomId)) {
-        return new Response(JSON.stringify({ error: "Invalid room ID format" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
       const exists = roomManager.roomExists(roomId);
       if (!exists) {
         return new Response(JSON.stringify({ error: "Room not found" }), {
@@ -105,12 +87,6 @@ export function createHttpHandler(messageStore: MessageStore, roomManager: RoomM
         );
       }
 
-      if (!isValidUUID(body.roomId)) {
-        return new Response(JSON.stringify({ error: "Invalid room ID format" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
 
       const joined = roomManager.joinRoom(body.roomId, body.peerId);
       if (!joined) {

@@ -17,7 +17,6 @@ export function HomePage() {
   return (
     <div style={colorStyles.bgPrimary} className="w-screen h-screen flex items-center justify-center">
       <RoomControl
-        roomId={null}
         onRoomCreated={handleRoomCreated}
         onJoinRoom={handleJoinRoom}
       />
