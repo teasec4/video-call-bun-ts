@@ -1,6 +1,7 @@
 import { useState } from "react";
 import clsx from "clsx";
-import { useHttp } from "@/hooks/useHttpConnectRoom";
+import { useHttp } from "@/hooks/useHttp";
+import { getOrCreateClientId } from "@/utils/uuid";
 
 const API_URL = 'http://localhost:3030';
 
@@ -16,7 +17,7 @@ export function RoomControl({ onRoomCreated, onJoinRoom}:RoomControlProps) {
     onCreateRoom: (id) => console.log("Created:", id),
   });
   
-  const [clientId] = useState(() => crypto.randomUUID());
+  const [clientId] = useState(() => getOrCreateClientId());
   
   
   const handleCreateRoom = async () => {
